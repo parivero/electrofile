@@ -4,12 +4,12 @@
       <v-container id="wrapping" fluid>
         <router-view></router-view>
       </v-container>
-      <v-btn fixed dark fab bottom right color='pink'> <v-icon>add</v-icon></v-btn>
     </main>
   </v-app>
 </template>
 
 <script>
+
 export default {
   name: "electrofile"
 };
