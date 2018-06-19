@@ -95,7 +95,7 @@ export default {
 
       scp.scp(
         fileList[0].path,
-        "pntdesa:RPJ82YMaMiFFTt9RgVhp@dev.somospnt.com:/home/pntdesa",
+        "user:password@server:path",
         client,
         function(err) {
           if (err) {
