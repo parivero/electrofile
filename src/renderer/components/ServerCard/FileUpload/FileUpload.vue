@@ -1,18 +1,30 @@
 <template>
     <div class="container">
-      <!--UPLOAD-->
-      <form enctype="multipart/form-data" novalidate v-if="isInitial || isSaving">
-        <div class="dropbox">
-          <input type="file" multiple :name="uploadFieldName" :disabled="isSaving" @change="filesChange($event.target.name, $event.target.files); fileCount = $event.target.files.length" accept="image/*" class="input-file">
-            <p v-if="isInitial">
-              Drag your file(s) here to begin<br> or click to browse
-            </p>
-            <p v-if="isSaving">
-              Uploading {{ fileCount }} files...
-            </p>
-        </div>
-      </form>
-  </div>
+      <div v-if="isSaving" class="progress">
+        <v-progress-circular
+          :size="100"
+          :width="15"
+          :rotate="360"
+          :value="value"
+          color="teal">
+            {{ value }}
+        </v-progress-circular>
+      </div>
+      <div v-if="isInitial" class="dropzone">
+        <!--UPLOAD-->
+        <form enctype="multipart/form-data" novalidate v-if="isInitial || isSaving">
+          <div class="dropbox">
+            <input type="file" multiple :name="uploadFieldName" :disabled="isSaving" @change="filesChange($event.target.name, $event.target.files); fileCount = $event.target.files.length" accept="image/*" class="input-file">
+              <p v-if="isInitial">
+                Drag your file(s) here to begin<br> or click to browse
+              </p>
+              <p v-if="isSaving">
+                Uploading {{ fileCount }} files...
+              </p>
+          </div>
+        </form>
+      </div>
+    </div>
 </template>
 
 <script>
@@ -31,7 +43,8 @@ export default {
       uploadedFiles: [],
       uploadError: null,
       currentStatus: null,
-      uploadFieldName: "file"
+      uploadFieldName: "file",
+      value: 0
     };
   },
   created() {
@@ -53,9 +66,17 @@ export default {
   },
   methods: {
     createClient() {
+      var data = this;
+
       client.on("transfer", function(buf, uploading, total) {
-        console.log("uploading: " + uploading);
-        console.log("total: " + total);
+
+        data.value = Math.trunc(((uploading+1) / total) * 100);
+        
+        if (data.value == 100) {
+          data.currentStatus = STATUS_INITIAL;
+          data.value = 0;
+        }
+        
       });
     },
     reset() {
@@ -64,19 +85,13 @@ export default {
       this.uploadedFiles = [];
       this.uploadError = null;
     },
-    save(formData) {
-      // upload data to the server
-      this.currentStatus = STATUS_SUCCESS;
-
-      this.currentStatus = STATUS_SAVING;
-
-      console.log(formData);
-    },
     filesChange(fieldName, fileList) {
       // handle file changes
       const formData = new FormData();
 
       if (!fileList.length) return;
+
+      this.currentStatus = STATUS_SAVING;
 
       scp.scp(
         fileList[0].path,
@@ -86,10 +101,9 @@ export default {
           if (err) {
             console.log(err);
           }
-          // save it
-          this.save(formData);
         }
       );
+      
     }
   },
   mounted() {
